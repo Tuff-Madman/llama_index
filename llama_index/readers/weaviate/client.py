@@ -105,8 +105,7 @@ def weaviate_query(
     # parse results
     parsed_result = parse_get_response(query_result)
     entries = parsed_result[class_name]
-    results = [_to_node(entry) for entry in entries]
-    return results
+    return [_to_node(entry) for entry in entries]
 
 
 def _class_name(class_prefix: str) -> str:
@@ -119,17 +118,9 @@ def _legacy_metadata_dict_to_node(entry: Dict[str, Any]) -> Tuple[dict, dict, di
     Only for backwards compatibility.
     """
     extra_info_str = entry["extra_info"]
-    if extra_info_str == "":
-        extra_info = {}
-    else:
-        extra_info = json.loads(extra_info_str)
-
+    extra_info = {} if extra_info_str == "" else json.loads(extra_info_str)
     node_info_str = entry["node_info"]
-    if node_info_str == "":
-        node_info = {}
-    else:
-        node_info = json.loads(node_info_str)
-
+    node_info = {} if node_info_str == "" else json.loads(node_info_str)
     relationships_str = entry["relationships"]
     relationships: Dict[DocumentRelationship, str]
     if relationships_str == "":
@@ -164,9 +155,7 @@ def _add_node(
     client: Any, node: Node, class_prefix: str, batch: Optional[Any] = None
 ) -> str:
     """Add node."""
-    metadata = {}
-    metadata["text"] = node.text or ""
-
+    metadata = {"text": node.text or ""}
     additional_metadata = node_to_metadata_dict(node)
     metadata.update(additional_metadata)
 

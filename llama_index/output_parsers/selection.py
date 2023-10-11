@@ -8,9 +8,7 @@ from llama_index.output_parsers.base import BaseOutputParser, StructuredOutput
 
 
 def _escape_curly_braces(input_string: str) -> str:
-    # Replace '{' with '{{' and '}' with '}}' to escape curly braces
-    escaped_string = input_string.replace("{", "{{").replace("}", "}}")
-    return escaped_string
+    return input_string.replace("{", "{{").replace("}", "}}")
 
 
 FORMAT_STR = """The output should be formatted as a JSON instance that conforms to 
@@ -61,8 +59,7 @@ class SelectionOutputParser(BaseOutputParser):
         output = output.strip()
         left = output.find("[")
         right = output.rfind("]")
-        output = output[left : right + 1]
-        return output
+        return output[left : right + 1]
 
     def parse(self, output: str) -> Any:
         output = self._marshal_llm_to_json(output)
@@ -71,5 +68,4 @@ class SelectionOutputParser(BaseOutputParser):
         return StructuredOutput(raw_output=output, parsed_output=answers)
 
     def format(self, prompt_template: str) -> str:
-        fmt = prompt_template + "\n\n" + _escape_curly_braces(FORMAT_STR)
-        return fmt
+        return prompt_template + "\n\n" + _escape_curly_braces(FORMAT_STR)

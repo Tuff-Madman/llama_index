@@ -99,11 +99,7 @@ class SimpleDirectoryReader(BaseReader):
             self.exclude = exclude
             self.input_files = self._add_files(self.input_dir)
 
-        if file_extractor is not None:
-            self.file_extractor = file_extractor
-        else:
-            self.file_extractor = {}
-
+        self.file_extractor = file_extractor if file_extractor is not None else {}
         self.supported_suffix = list(DEFAULT_FILE_READER_CLS.keys())
         self.file_metadata = file_metadata
 
@@ -152,7 +148,7 @@ class SimpleDirectoryReader(BaseReader):
         new_input_files = sorted(list(all_files))
 
         if self.num_files_limit is not None and self.num_files_limit > 0:
-            new_input_files = new_input_files[0 : self.num_files_limit]
+            new_input_files = new_input_files[:self.num_files_limit]
 
         # print total number of files added
         logger.debug(

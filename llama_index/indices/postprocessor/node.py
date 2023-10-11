@@ -318,9 +318,7 @@ class AutoPrevNextNodePostprocessor(BasePydanticNodePostprocessor):
                 all_nodes.update(
                     get_backward_nodes(node, self.num_nodes, self.docstore)
                 )
-            elif mode == "none":
-                pass
-            else:
+            elif mode != "none":
                 raise ValueError(f"Invalid mode: {mode}")
 
         sorted_nodes = sorted(all_nodes.values(), key=lambda x: x.node.get_doc_id())

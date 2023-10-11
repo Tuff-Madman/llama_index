@@ -190,8 +190,7 @@ class GPTKeywordTableIndex(BaseGPTKeywordTableIndex):
             self.keyword_extract_template,
             text=text,
         )
-        keywords = extract_keywords_given_response(response, start_token="KEYWORDS:")
-        return keywords
+        return extract_keywords_given_response(response, start_token="KEYWORDS:")
 
     async def _async_extract_keywords(self, text: str) -> Set[str]:
         """Extract keywords from text."""
@@ -199,5 +198,4 @@ class GPTKeywordTableIndex(BaseGPTKeywordTableIndex):
             self.keyword_extract_template,
             text=text,
         )
-        keywords = extract_keywords_given_response(response, start_token="KEYWORDS:")
-        return keywords
+        return extract_keywords_given_response(response, start_token="KEYWORDS:")

@@ -142,17 +142,15 @@ class GPTVectorStoreIndex(BaseGPTIndex[IndexDict]):
 
         # if the vector store doesn't store text, we need to add the nodes to the
         # index struct and document store
-        if not self._vector_store.stores_text or self._store_nodes_override:
-            for result, new_id in zip(embedding_results, new_ids):
+        for result, new_id in zip(embedding_results, new_ids):
+                # if the vector store doesn't store text, we need to add the nodes to the
+                # index struct and document store
+            if not self._vector_store.stores_text or self._store_nodes_override:
                 index_struct.add_node(result.node, text_id=new_id)
                 self._docstore.add_documents([result.node], allow_update=True)
-        else:
-            # NOTE: if the vector store keeps text,
-            # we only need to add image and index nodes
-            for result, new_id in zip(embedding_results, new_ids):
-                if isinstance(result.node, (ImageNode, IndexNode)):
-                    index_struct.add_node(result.node, text_id=new_id)
-                    self._docstore.add_documents([result.node], allow_update=True)
+            elif isinstance(result.node, (ImageNode, IndexNode)):
+                index_struct.add_node(result.node, text_id=new_id)
+                self._docstore.add_documents([result.node], allow_update=True)
 
     def _add_nodes_to_index(
         self,
@@ -166,19 +164,13 @@ class GPTVectorStoreIndex(BaseGPTIndex[IndexDict]):
         embedding_results = self._get_node_embedding_results(nodes)
         new_ids = self._vector_store.add(embedding_results)
 
-        if not self._vector_store.stores_text or self._store_nodes_override:
-            # NOTE: if the vector store doesn't store text,
-            # we need to add the nodes to the index struct and document store
-            for result, new_id in zip(embedding_results, new_ids):
+        for result, new_id in zip(embedding_results, new_ids):
+            if not self._vector_store.stores_text or self._store_nodes_override:
                 index_struct.add_node(result.node, text_id=new_id)
                 self._docstore.add_documents([result.node], allow_update=True)
-        else:
-            # NOTE: if the vector store keeps text,
-            # we only need to add image and index nodes
-            for result, new_id in zip(embedding_results, new_ids):
-                if isinstance(result.node, (ImageNode, IndexNode)):
-                    index_struct.add_node(result.node, text_id=new_id)
-                    self._docstore.add_documents([result.node], allow_update=True)
+            elif isinstance(result.node, (ImageNode, IndexNode)):
+                index_struct.add_node(result.node, text_id=new_id)
+                self._docstore.add_documents([result.node], allow_update=True)
 
     def _build_index_from_nodes(self, nodes: Sequence[Node]) -> IndexDict:
         """Build index from nodes."""

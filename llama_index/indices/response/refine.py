@@ -93,7 +93,7 @@ class Refine(BaseResponseBuilder):
                 self._log_prompt_and_response(
                     formatted_prompt, response, log_prefix="Initial"
                 )
-            elif response is None and self._streaming:
+            elif response is None:
                 response, formatted_prompt = self._service_context.llm_predictor.stream(
                     text_qa_template,
                     context_str=cur_text_chunk,
