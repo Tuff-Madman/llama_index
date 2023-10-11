@@ -14,15 +14,13 @@ from llama_index.vector_stores.utils import metadata_dict_to_node, node_to_metad
 
 
 def _to_metal_filters(standard_filters: MetadataFilters) -> list:
-    filters = []
-    for filter in standard_filters.filters:
-        filters.append(
-            {
-                "field": filter.key,
-                "value": filter.value,
-            }
-        )
-    return filters
+    return [
+        {
+            "field": filter.key,
+            "value": filter.value,
+        }
+        for filter in standard_filters.filters
+    ]
 
 
 def _legacy_metadata_dict_to_node(metadata: Dict[str, Any]) -> Tuple[dict, dict, dict]:
@@ -62,17 +60,17 @@ class MetalVectorStore(VectorStore):
         self.is_embedding_query = True
 
     def query(self, query: VectorStoreQuery, **kwargs: Any) -> VectorStoreQueryResult:
-        if query.filters is not None:
-            if "filters" in kwargs:
-                raise ValueError(
-                    "Cannot specify filter via both query and kwargs. "
-                    "Use kwargs only for metal specific items that are "
-                    "not supported via the generic query interface."
-                )
-            filters = _to_metal_filters(query.filters)
-        else:
+        if query.filters is None:
             filters = kwargs.get("filters", {})
 
+        elif "filters" in kwargs:
+            raise ValueError(
+                "Cannot specify filter via both query and kwargs. "
+                "Use kwargs only for metal specific items that are "
+                "not supported via the generic query interface."
+            )
+        else:
+            filters = _to_metal_filters(query.filters)
         payload = {
             "embedding": query.query_embedding,  # Query Embedding
             "filters": filters,  # Metadata Filters
@@ -132,9 +130,7 @@ class MetalVectorStore(VectorStore):
         for result in embedding_results:
             ids.append(result.id)
 
-            metadata = {}
-            metadata["text"] = result.node.text or ""
-
+            metadata = {"text": result.node.text or ""}
             additional_metadata = node_to_metadata_dict(result.node)
             metadata.update(additional_metadata)
 

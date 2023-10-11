@@ -22,7 +22,7 @@ class Accumulate(BaseResponseBuilder):
         self._use_async = use_async
 
     def flatten_list(self, md_array: List[List[Any]]) -> List[Any]:
-        return list(item for sublist in md_array for item in sublist)
+        return [item for sublist in md_array for item in sublist]
 
     def format_response(self, outputs: List[Any], separator: str) -> str:
         responses: List[str] = []

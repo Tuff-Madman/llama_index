@@ -28,11 +28,11 @@ def _get_node_info_from_metadata(
     metadata: Dict[str, Any], field_prefix: str
 ) -> Dict[str, Any]:
     """Get node extra info from metadata."""
-    node_extra_info = {}
-    for key, value in metadata.items():
-        if key.startswith(field_prefix + "_"):
-            node_extra_info[key.replace(field_prefix + "_", "")] = value
-    return node_extra_info
+    return {
+        key.replace(f"{field_prefix}_", ""): value
+        for key, value in metadata.items()
+        if key.startswith(f"{field_prefix}_")
+    }
 
 
 def build_dict(input_batch: List[List[int]]) -> List[Dict[str, Any]]:
@@ -67,9 +67,7 @@ def generate_sparse_vectors(
     """
     # create batch of input_ids
     inputs = tokenizer(context_batch)["input_ids"]
-    # create sparse dictionaries
-    sparse_embeds = build_dict(inputs)
-    return sparse_embeds
+    return build_dict(inputs)
 
 
 def get_default_tokenizer() -> Callable:
@@ -81,22 +79,17 @@ def get_default_tokenizer() -> Callable:
     from transformers import BertTokenizerFast
 
     orig_tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
-    # set some default arguments, so input is just a list of strings
-    tokenizer = partial(
+    return partial(
         orig_tokenizer,
         padding=True,
         truncation=True,
         max_length=512,
     )
-    return tokenizer
 
 
 def _to_pinecone_filter(standard_filters: MetadataFilters) -> dict:
     """Convert from standard dataclass to pinecone filter dict."""
-    filters = {}
-    for filter in standard_filters.filters:
-        filters[filter.key] = filter.value
-    return filters
+    return {filter.key: filter.value for filter in standard_filters.filters}
 
 
 def _legacy_metadata_dict_to_node(metadata: Dict[str, Any]) -> Tuple[dict, dict, dict]:
@@ -205,7 +198,7 @@ class PineconeVectorStore(VectorStore):
                 sparse_vector = generate_sparse_vectors(
                     [node.get_text()], self._tokenizer
                 )[0]
-                entry.update({"sparse_values": sparse_vector})
+                entry["sparse_values"] = sparse_vector
             self._pinecone_index.upsert(
                 [entry], namespace=self._namespace, **self._insert_kwargs
             )
@@ -256,17 +249,17 @@ class PineconeVectorStore(VectorStore):
             if query.alpha is not None:
                 query_embedding = [v * query.alpha for v in query_embedding]
 
-        if query.filters is not None:
-            if "filter" in kwargs:
-                raise ValueError(
-                    "Cannot specify filter via both query and kwargs. "
-                    "Use kwargs only for pinecone specific items that are "
-                    "not supported via the generic query interface."
-                )
-            filter = _to_pinecone_filter(query.filters)
-        else:
+        if query.filters is None:
             filter = kwargs.pop("filter", {})
 
+        elif "filter" in kwargs:
+            raise ValueError(
+                "Cannot specify filter via both query and kwargs. "
+                "Use kwargs only for pinecone specific items that are "
+                "not supported via the generic query interface."
+            )
+        else:
+            filter = _to_pinecone_filter(query.filters)
         response = self._pinecone_index.query(
             vector=query_embedding,
             sparse_vector=sparse_vector,

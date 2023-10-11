@@ -123,7 +123,7 @@ class RedisVectorStore(VectorStore):
             ValueError: If the index already exists and overwrite is False.
         """
         # check to see if empty document list was passed
-        if len(embedding_results) == 0:
+        if not embedding_results:
             return []
 
         # set vector dim for creation if index doesn't exist

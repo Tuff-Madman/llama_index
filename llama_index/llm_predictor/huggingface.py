@@ -100,17 +100,17 @@ class HuggingFaceLLMPredictor(BaseLLMPredictor):
         # setup stopping criteria
         stopping_ids_list = stopping_ids or []
 
+
+
         class StopOnTokens(StoppingCriteria):
             def __call__(
-                self,
-                input_ids: torch.LongTensor,
-                scores: torch.FloatTensor,
-                **kwargs: Any,
-            ) -> bool:
-                for stop_id in stopping_ids_list:
-                    if input_ids[0][-1] == stop_id:
-                        return True
-                return False
+                        self,
+                        input_ids: torch.LongTensor,
+                        scores: torch.FloatTensor,
+                        **kwargs: Any,
+                    ) -> bool:
+                return any(input_ids[0][-1] == stop_id for stop_id in stopping_ids_list)
+
 
         self._stopping_criteria = StoppingCriteriaList([StopOnTokens()])
 
@@ -168,8 +168,7 @@ class HuggingFaceLLMPredictor(BaseLLMPredictor):
 
         # create generator based off of streamer
         def response() -> Generator:
-            for x in streamer:
-                yield x
+            yield from streamer
 
         return response(), formatted_prompt
 
@@ -200,8 +199,7 @@ class HuggingFaceLLMPredictor(BaseLLMPredictor):
         """
         import torch
 
-        llm_payload = {**prompt_args}
-        llm_payload["template"] = prompt
+        llm_payload = {**prompt_args, "template": prompt}
         event_id = self.callback_manager.on_event_start(
             CBEventType.LLM, payload=llm_payload
         )
@@ -212,8 +210,10 @@ class HuggingFaceLLMPredictor(BaseLLMPredictor):
             full_prompt = f"{self._system_prompt} {full_prompt}"
 
         inputs = self.tokenizer(full_prompt, return_tensors="pt")
-        if "cuda" == self._device_map or (
-            "auto" == self._device_map and torch.cuda.is_available()
+        if (
+            self._device_map == "cuda"
+            or self._device_map == "auto"
+            and torch.cuda.is_available()
         ):
             inputs = inputs.to("cuda")
 

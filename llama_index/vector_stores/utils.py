@@ -13,10 +13,7 @@ def node_to_metadata_dict(node: Node) -> dict:
     if node.extra_info is not None:
         metadata.update(node.extra_info)
 
-    # json-serialize the node_info
-    node_info_str = ""
-    if node.node_info is not None:
-        node_info_str = json.dumps(node.node_info)
+    node_info_str = "" if node.node_info is None else json.dumps(node.node_info)
     metadata["node_info"] = node_info_str
 
     # json-serialize the relationships
@@ -41,11 +38,7 @@ def metadata_dict_to_node(metadata: dict) -> Tuple[dict, dict, dict]:
 
     # load node_info from json string
     node_info_str = metadata.pop("node_info", "")
-    if node_info_str == "":
-        node_info = {}
-    else:
-        node_info = json.loads(node_info_str)
-
+    node_info = {} if node_info_str == "" else json.loads(node_info_str)
     # load relationships from json string
     relationships_str = metadata.pop("relationships", "")
     relationships: Dict[DocumentRelationship, str]
